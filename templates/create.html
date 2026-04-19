@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-md-7">
+    <div class="card shadow"><div class="card-body">
+        <h3 class="text-center mb-4">Создать опрос</h3>
+        <form method="POST">
+            <div class="mb-3">{{ form.title.label(class="form-label") }} {{ form.title(class="form-control") }}</div>
+            <div class="mb-3">{{ form.opt1.label(class="form-label") }} {{ form.opt1(class="form-control") }}</div>
+            <div class="mb-3">{{ form.opt2.label(class="form-label") }} {{ form.opt2(class="form-control") }}</div>
+            <div class="mb-3">{{ form.opt3.label(class="form-label") }} {{ form.opt3(class="form-control") }}</div>
+            <div class="d-grid">{{ form.submit(class="btn btn-success") }}</div>
+        </form>
+    </div></div>
+</div></div>
+{% endblock %}

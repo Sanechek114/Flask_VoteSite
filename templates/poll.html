@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow mb-4"><div class="card-body">
+    <h2>{{ poll.title }}</h2>
+    {% if voted %}
+        <div class="alert alert-success">Вы уже проголосовали в этом опросе.</div>
+        <a href="{{ url_for('results', id=poll.id) }}" class="btn btn-outline-primary">Посмотреть результаты</a>
+    {% else %}
+        <form action="{{ url_for('vote_web', id=poll.id) }}" method="POST">
+            <div class="mb-3">
+                {% for opt in poll.options %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="option" id="opt{{ opt.id }}" value="{{ opt.id }}" required>
+                    <label class="form-check-label" for="opt{{ opt.id }}">{{ opt.text }}</label>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary">Голосовать</button>
+        </form>
+    {% endif %}
+</div></div>
+{% endblock %}

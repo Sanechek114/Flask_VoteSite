@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4">Результаты: {{ poll.title }}</h2>
+{% for opt in poll.options %}
+    {% set pct = (opt.votes.count() / total * 100)|round(1) if total else 0 %}
+    <div class="mb-3">
+        <div class="d-flex justify-content-between"><strong>{{ opt.text }}</strong><span>{{ pct }}%</span></div>
+        <div class="progress mt-1" style="height: 20px;">
+            <div class="progress-bar" role="progressbar" style="width: {{ pct }}%"></div>
+        </div>
+    </div>
+{% endfor %}
+<p class="text-muted">Всего голосов: {{ total }}</p>
+<a href="{{ url_for('poll', id=poll.id) }}" class="btn btn-secondary">Вернуться к опросу</a>
+{% endblock %}
