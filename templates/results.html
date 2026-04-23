@@ -11,5 +11,5 @@
     </div>
 {% endfor %}
 <p class="text-muted">Всего голосов: {{ total }}</p>
-<a href="{{ url_for('poll', id=poll.id) }}" class="btn btn-secondary">Вернуться к опросу</a>
+<a href="{{ url_for('index') }}" class="btn btn-secondary">Вернуться в меню</a>
 {% endblock %}

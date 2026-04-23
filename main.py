@@ -20,7 +20,7 @@ def create_app():
 
     db.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = 'login'  # type: ignore
+    login_manager.login_view = 'login'
     api.init_app(app)
 
     api.add_resource(PollListResource, '/api/polls')
