@@ -20,7 +20,7 @@ def create_app():
 
     db.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = 'login'  # type: ignore
+    login_manager.login_view = 'login'
     api.init_app(app)
 
     api.add_resource(PollListResource, '/api/polls')
@@ -103,6 +103,7 @@ def create_app():
         if Vote.query.filter_by(user_id=current_user.id, option_id=opt_id).first():
             flash('Вы уже голосовали')
             return redirect(url_for('poll', id=id))
+        print(current_user.username, opt_id)
         db.session.add(Vote(user_id=current_user.id, option_id=int(opt_id)))
         db.session.commit()
         return redirect(url_for('results', id=id))
@@ -119,4 +120,4 @@ def create_app():
 
 
 if __name__ == '__main__':
-    create_app().run()
+    create_app().run(port=5000, host='0.0.0.0')
