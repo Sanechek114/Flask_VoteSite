@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-4"><div class="col-md-7">
+    <div class="card"><div class="card-body p-4">
+        <h4 class="mb-4 text-center">Шаг 2: Варианты ответов</h4>
+        <form method="POST">
+            {% for i in range(num) %}
+            <div class="mb-3">{{ form['opt' ~ i].label(class="form-label") }} {{ form['opt' ~ i](class="form-control") }}</div>
+            {% endfor %}
+            <div class="d-grid">{{ form.submit(class="btn btn-success btn-lg") }}</div>
+        </form>
+        <a href="{{ url_for('create_config') }}" class="text-center d-block mt-3 text-muted">← Вернуться к настройкам</a>
+    </div></div>
+</div></div>
+{% endblock %}
