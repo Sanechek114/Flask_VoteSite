@@ -1,21 +1,36 @@
 import os
-from flask import Flask, render_template, redirect, request, url_for, flash
+from flask import Flask, render_template, redirect, url_for, flash, session, request, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_restful import Api
+from functools import wraps
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+from flask_wtf import FlaskForm
 
 from data import db
 from data.models import User, Poll, Option, Vote
-from data.forms import RegForm, LoginForm, PollForm
+from data.forms import RegForm, LoginForm, PollConfigForm
 from data.api import PollListResource, VoteResource
 
 login_manager = LoginManager()
 api = Api()
 
 
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash('Доступ запрещён')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated
+
+
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.urandom(24)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['WTF_CSRF_ENABLED'] = False
 
     db.init_app(app)
@@ -28,7 +43,7 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(uid):
-        return User.query.get(int(uid))
+        return db.session.get(User, int(uid))
 
     @app.route('/')
     def index():
@@ -41,11 +56,13 @@ def create_app():
             if User.query.filter_by(username=form.username.data).first():
                 flash('Логин уже занят')
                 return redirect(url_for('register'))
-            u = User(username=form.username.data)
+            is_first = User.query.count() == 0
+            u = User(username=form.username.data, is_admin=is_first)
             u.set_password(form.password.data)
             db.session.add(u)
             db.session.commit()
-            flash('Регистрация успешна')
+            flash('Регистрация успешна' +
+                  (' ✅ Вы администратор!' if is_first else ''))
             return redirect(url_for('login'))
         return render_template('register.html', form=form)
 
@@ -66,25 +83,78 @@ def create_app():
         logout_user()
         return redirect(url_for('index'))
 
-    @app.route('/create', methods=['GET', 'POST'])
+    @app.route('/admin')
+    @admin_required
+    def admin():
+        return render_template('admin.html', users=User.query.all(), polls=Poll.query.all())
+
+    @app.route('/admin/delete_user/<int:id>', methods=['POST'])
+    @admin_required
+    def delete_user(id):
+        if id == current_user.id:
+            flash('Нельзя удалить себя')
+            return redirect(url_for('admin'))
+        u = db.session.get(User, id)
+        if u:
+            db.session.delete(u)
+            db.session.commit()
+            flash('Пользователь удалён')
+        return redirect(url_for('admin'))
+
+    @app.route('/admin/delete_poll/<int:id>', methods=['POST'])
+    @admin_required
+    def delete_poll(id):
+        p = db.session.get(Poll, id)
+        if p:
+            db.session.delete(p)
+            db.session.commit()
+            flash('Опрос удалён')
+        return redirect(url_for('admin'))
+
+    # 2-шаговое создание опроса
+    @app.route('/create/config', methods=['GET', 'POST'])
     @login_required
-    def create_poll():
-        form = PollForm()
+    def create_config():
+        form = PollConfigForm()
         if form.validate_on_submit():
-            p = Poll(title=form.title.data, creator_id=current_user.id)
+            session['poll_title'] = form.title.data
+            session['poll_num'] = form.num_options.data
+            return redirect(url_for('create_options'))
+        return render_template('create_config.html', form=form)
+
+    @app.route('/create/options', methods=['GET', 'POST'])
+    @login_required
+    def create_options():
+        if 'poll_title' not in session or 'poll_num' not in session:
+            return redirect(url_for('create_config'))
+        num = session['poll_num']
+
+        class TempPollForm(FlaskForm):
+            pass
+        for i in range(num):
+            setattr(TempPollForm, f'opt{i}', StringField(
+                f'Вариант {i+1}', validators=[DataRequired()]))
+        setattr(TempPollForm, 'submit', SubmitField('Создать опрос'))
+        form = TempPollForm()
+        if form.validate_on_submit():
+            p = Poll(title=session['poll_title'], creator_id=current_user.id)
             db.session.add(p)
             db.session.flush()
-            for txt in [form.opt1.data, form.opt2.data, form.opt3.data]:
-                if txt:
-                    db.session.add(Option(poll_id=p.id, text=txt))
+            for i in range(num):
+                db.session.add(
+                    Option(poll_id=p.id, text=getattr(form, f'opt{i}').data))
             db.session.commit()
-            flash('Опрос создан')
+            session.pop('poll_title', None)
+            session.pop('poll_num', None)
+            flash('Опрос успешно создан')
             return redirect(url_for('index'))
-        return render_template('create.html', form=form)
+        return render_template('create_options.html', form=form, num=num)
 
     @app.route('/poll/<int:id>')
     def poll(id):
-        p = Poll.query.get_or_404(id)
+        p = db.session.get(Poll, id)
+        if not p:
+            abort(404)
         voted = False
         if current_user.is_authenticated:
             for opt in p.options:
@@ -96,21 +166,24 @@ def create_app():
     @app.route('/vote/<int:id>', methods=['POST'])
     @login_required
     def vote_web(id):
-        p = Poll.query.get_or_404(id)
+        p = db.session.get(Poll, id)
+        if not p:
+            abort(404)
         opt_id = request.form.get('option')
         if not opt_id:
             return redirect(url_for('poll', id=id))
         if Vote.query.filter_by(user_id=current_user.id, option_id=opt_id).first():
             flash('Вы уже голосовали')
             return redirect(url_for('poll', id=id))
-        print(current_user.username, opt_id)
         db.session.add(Vote(user_id=current_user.id, option_id=int(opt_id)))
         db.session.commit()
         return redirect(url_for('results', id=id))
 
     @app.route('/results/<int:id>')
     def results(id):
-        p = Poll.query.get_or_404(id)
+        p = db.session.get(Poll, id)
+        if not p:
+            abort(404)
         total = sum(opt.votes.count() for opt in p.options)
         return render_template('results.html', poll=p, total=total)
 
@@ -120,4 +193,4 @@ def create_app():
 
 
 if __name__ == '__main__':
-    create_app().run(port=5000, host='0.0.0.0')
+    create_app().run()
