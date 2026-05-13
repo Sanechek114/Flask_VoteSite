@@ -52,8 +52,7 @@ def create_app():
             if User.query.filter_by(username=form.username.data).first():
                 flash('Логин уже занят')
                 return redirect(url_for('register'))
-            
-            # 👇 Надёжная проверка: первый ли пользователь?
+
             is_first_user = User.query.count() == 0
             
             u = User(username=form.username.data, is_admin=is_first_user)
