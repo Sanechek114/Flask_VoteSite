@@ -2,6 +2,14 @@
 {% block content %}
 <div class="card shadow mb-4"><div class="card-body">
     <h2>{{ poll.title }}</h2>
+    {% if current_user.is_authenticated and poll.creator_id == current_user.id %}
+    <div class="mb-3 d-flex gap-2">
+        <a href="{{ url_for('edit_poll', id=poll.id) }}" class="btn btn-sm btn-outline-primary">✏️ Редактировать</a>
+        <form method="POST" action="{{ url_for('delete_poll_user', id=poll.id) }}" class="d-inline" onsubmit="return confirm('Удалить этот опрос? Это действие нельзя отменить.')">
+            <button type="submit" class="btn btn-sm btn-outline-danger">🗑️ Удалить</button>
+        </form>
+    </div>
+{% endif %}
     {% if voted %}
         <div class="alert alert-success">Вы уже проголосовали в этом опросе.</div>
         <a href="{{ url_for('results', id=poll.id) }}" class="btn btn-outline-primary">Посмотреть результаты</a>

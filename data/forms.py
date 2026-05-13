@@ -24,3 +24,9 @@ class PollConfigForm(FlaskForm):
     num_options = IntegerField('Количество вариантов', validators=[
                                DataRequired(), NumberRange(min=2, max=10)])
     submit = SubmitField('Далее →')
+
+
+
+class EditPollBaseForm(FlaskForm):
+    title = StringField('Название опроса', validators=[DataRequired(), Length(3,100)])
+    submit = SubmitField('Сохранить изменения')

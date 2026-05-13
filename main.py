@@ -4,7 +4,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from flask_restful import Api
 from functools import wraps
 from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, Length
 from flask_wtf import FlaskForm
 
 from data import db
@@ -150,6 +150,51 @@ def create_app():
             return redirect(url_for('index'))
         return render_template('create_options.html', form=form, num=num)
 
+    @app.route('/poll/<int:id>/edit', methods=['GET', 'POST'])
+    @login_required
+    def edit_poll(id):
+        p = db.session.get(Poll, id)
+        if not p or p.creator_id != current_user.id:
+            flash('Доступ запрещён')
+            return redirect(url_for('index'))
+
+        class EditPollForm(FlaskForm):
+            pass
+        setattr(EditPollForm, 'title', StringField(
+            'Название', validators=[DataRequired(), Length(3, 100)]))
+        for i, opt in enumerate(p.options):
+            setattr(EditPollForm, f'opt{i}', StringField(
+                f'Вариант {i+1}', validators=[DataRequired()]))
+        setattr(EditPollForm, 'submit', SubmitField('Сохранить'))
+
+        form = EditPollForm()
+        # Заполняем форму текущими данными при первом заходе (GET)
+        if request.method == 'GET':
+            form.title.data = p.title
+            for i, opt in enumerate(p.options):
+                getattr(form, f'opt{i}').data = opt.text
+
+        if form.validate_on_submit():
+            p.title = form.title.data
+            for i, opt in enumerate(p.options):
+                opt.text = getattr(form, f'opt{i}').data
+            db.session.commit()
+            flash('Опрос обновлён')
+            return redirect(url_for('poll', id=p.id))
+        return render_template('edit_poll.html', form=form, poll=p)
+
+    @app.route('/poll/<int:id>/delete', methods=['POST'])
+    @login_required
+    def delete_poll_user(id):
+        p = db.session.get(Poll, id)
+        if not p or p.creator_id != current_user.id:
+            flash('Доступ запрещён')
+            return redirect(url_for('index'))
+        db.session.delete(p)
+        db.session.commit()
+        flash('Опрос удалён')
+        return redirect(url_for('index'))
+
     @app.route('/poll/<int:id>')
     def poll(id):
         p = db.session.get(Poll, id)
@@ -193,4 +238,4 @@ def create_app():
 
 
 if __name__ == '__main__':
-    create_app().run()
+    create_app().run(host='0.0.0.0', port=5000)
