@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-4"><div class="col-md-6">
+    <div class="card"><div class="card-body p-4">
+        <h4 class="mb-4 text-center">Шаг 1: Настройки опроса</h4>
+        <form method="POST">
+            <div class="mb-3">{{ form.title.label(class="form-label") }} {{ form.title(class="form-control form-control-lg") }}</div>
+            <div class="mb-3">{{ form.num_options.label(class="form-label") }} {{ form.num_options(class="form-control") }}<small class="text-muted d-block mt-1">От 2 до 10 вариантов</small></div>
+            <div class="d-grid">{{ form.submit(class="btn btn-primary btn-lg") }}</div>
+        </form>
+    </div></div>
+</div></div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4">Доступные опросы</h2>
+<div class="row">
+    {% for p in polls %}
+    <div class="col-md-6 mb-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><a href="{{ url_for('poll', id=p.id) }}" class="text-decoration-none">{{ p.title }}</a></h5>
+                <p class="card-text text-muted">Автор: {{ p.author.username }}</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12"><div class="alert alert-secondary">Пока нет опросов. <a href="{{ url_for('register') }}">Зарегистрируйтесь</a> и создайте первый.</div></div>
+    {% endfor %}
+</div>
+{% endblock %}

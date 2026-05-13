@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-4">⚙️ Панель администратора</h3>
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card"><div class="card-header">👥 Пользователи</div><div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead><tr><th>ID</th><th>Логин</th><th>Роль</th><th></th></tr></thead>
+                    <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ u.id }}</td><td>{{ u.username }}</td>
+                        <td><span class="badge {{ 'bg-success' if u.is_admin else 'bg-secondary' }}">{{ 'Админ' if u.is_admin else 'Пользователь' }}</span></td>
+                        <td>
+                            {% if u.id != current_user.id %}
+                            <form method="POST" action="{{ url_for('delete_user', id=u.id) }}" class="d-inline" onsubmit="return confirm('Удалить пользователя?')">
+                                <button class="btn btn-sm btn-outline-danger">Удалить</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card"><div class="card-header">📊 Опросы</div><div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead><tr><th>ID</th><th>Название</th><th>Автор</th><th></th></tr></thead>
+                <tbody>
+                {% for p in polls %}
+                <tr>
+                    <td>{{ p.id }}</td><td>{{ p.title }}</td><td>{{ p.author.username }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('delete_poll', id=p.id) }}" class="d-inline" onsubmit="return confirm('Удалить опрос?')">
+                            <button class="btn btn-sm btn-outline-danger">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div></div>
+    </div>
+</div>
+{% endblock %}

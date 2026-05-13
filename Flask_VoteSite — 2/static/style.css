@@ -1,0 +1,34 @@
+:root {
+  --primary: #4361ee;
+  --primary-hover: #3a56d4;
+  --bg: #f8fafc;
+  --card-bg: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --danger: #ef4444;
+}
+
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; }
+
+.card { border: none; border-radius: 12px; background: var(--card-bg); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); transition: transform 0.2s, box-shadow 0.2s; }
+.card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+.card-header { background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; border-radius: 12px 12px 0 0 !important; font-weight: 500; }
+
+.form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15); }
+.btn-primary { background: var(--primary); border: none; padding: 0.6rem 1.2rem; font-weight: 500; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-outline-danger { border-color: var(--danger); color: var(--danger); }
+.btn-outline-danger:hover { background: var(--danger); color: white; }
+
+.progress { background: var(--border); border-radius: 99px; height: 14px; }
+.progress-bar { background: linear-gradient(90deg, var(--primary), #60a5fa); border-radius: 99px; }
+
+.navbar { backdrop-filter: blur(10px); background: rgba(255,255,255,0.9) !important; border-bottom: 1px solid var(--border); }
+.navbar-brand { font-weight: 700; color: var(--primary) !important; }
+.nav-link { color: var(--text) !important; font-weight: 500; }
+.nav-link:hover { color: var(--primary) !important; }
+
+.alert { border-radius: 8px; border: none; }
+.badge { font-weight: 500; padding: 0.35em 0.65em; }
